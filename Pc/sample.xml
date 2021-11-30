@@ -1,0 +1,19 @@
+<!-- <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<Pallet_Data FormatVersion="1">
+    <Components>
+        <Component stationID="1" rfidID="2" Time="12:45">
+        </Component>
+    </Components>
+</Pallet_Data>
+ -->
+
+
+
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<Pallet_Data FormatVersion="1">
+    <Component>
+        <Station>1</Station>
+        <rfid>1</rfid>
+        <Time>13:27</Time>        
+    </Component>
+</Pallet_Data>
