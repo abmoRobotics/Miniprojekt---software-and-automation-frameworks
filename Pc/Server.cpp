@@ -175,64 +175,17 @@ int main(int argc, char const *argv[])
 
     valread = read( new_socket , buffer, 1024);
     printf("%s\n",buffer );
-    // int valread2;
-    // valread2 = std::stoi(valread);
 
-    // std::ofstream logfile;
-    // logfile.open("logFile.csv", std::fstream::app);
 
     char returnMessage[] = "0";
-    std::string Besked;
-    // pugi::xml_document doc;
-    // std::cout << buffer << std::endl;
-    // // load the XML file
-    
-    // if (!doc.load_string(buffer)) return -1;
-    // pugi::xml_node tools = doc.child("Pallet_Data").child("Component");
-    // int i, j;
-    // std::string p1 = "Station";
-    // bool dataRecieved = false;
-
-     
-    // for (pugi::xml_node_iterator it = tools.begin(); it != tools.end(); ++it)
-    // {
-    //     std::string name;
-    //     // std::cout << it->name() << ": ";
-    //     // std::cout << it->child_value() << std::endl;
-    //     name = it->name();
-    //     if (name == "Station"){
-    //         std::cout << name << ": " << it->child_value() << std::endl;
-    //         j = std::stoi(it->child_value()) - 1;
-    //         logfile << it->child_value() << ", ";
-    //     }
-    //     else if (name == "rfid")
-    //     {
-    //         std::cout << name << ": " << it->child_value() << std::endl;
-    //         i = std::stoi(it->child_value()) - 1;
-    //         logfile << it->child_value() << ", ";
-    //     }  
-    //     else if (name == "Time")
-    //     {
-    //        std::cout << name << ": " << it->child_value() << std::endl;
-    //        logfile << it->child_value() << "\n";
-    //        dataRecieved = true;
-    //     }
-        
-    // }
-    // logfile.close();
+  
     std::string message;
     std::array<int,2> carrierInfo;
     carrierInfo = decodeXML(buffer);
     int carrierID = carrierInfo[0];
     int rfidTag = carrierInfo[1];
     message = ("TIME#" + std::to_string(carrierData[carrierID][rfidTag]) + "ms");
-    // if(dataRecieved){
-    //     message = std::to_string(carrierData[i][j]);
-    // }else{
-    //     message = "0";
-    // }    // std::cout << carrierData[i][j] << std::endl;
 
-    // dataRecieved = false;
     strcpy(returnMessage,message.c_str());
 
     send(new_socket , returnMessage , strlen(returnMessage) , 0 );
