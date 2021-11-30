@@ -1,0 +1,34 @@
+FUNCTION POU : STRING(255)
+VAR_INPUT // Function parameters
+	StationID : INT;
+	carrierID : INT;
+	clock : STRING;
+END_VAR
+VAR
+	startString : STRING(255);
+	endString : STRING(255);
+	finalString : STRING(255) := '<?xml version="1.0" encoding="UTF-8" standalone="no" ?> <Pallet_Data FormatVersion="1">';
+END_VAR
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+// Initialize the string with an XML formation 
+// Concat connects to strings by placing the last input behind the first.
+
+finalString := CONCAT(finalString,' <Component>');
+finalString := CONCAT(finalString,' <Station>');
+finalString := CONCAT(finalString,INT_TO_STRING(StationID));
+finalString := CONCAT(finalString,'</Station>');
+finalString := CONCAT(finalString,' <rfid>');
+finalString := CONCAT(finalString,INT_TO_STRING(carrierID));
+finalString := CONCAT(finalString,' </rfid>');
+finalString := CONCAT(finalString,' <Time>');
+finalString := CONCAT(finalString, clock);
+finalString := CONCAT(finalString,' </Time>');
+finalString := CONCAT(finalString,' </Component>');
+finalString := CONCAT(finalString,' </Pallet_Data>');
+POU := finalString;
+RETURN;

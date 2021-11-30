@@ -1,0 +1,114 @@
+PROGRAM PLC_PRG
+VAR
+	state: UINT := 0;
+	varBOOL1: BOOL;
+	RFID: dc_ecp.Dtm425;
+	TONInst4: TON;
+	rfidData: dc_ecp.st_CPF_RfidData;
+	//TONInst: TON;
+	//TONInst2: TON;
+	udiUTC_DateAndTime : UDINT;
+	udiLocal_DateAndTime : UDINT;
+	varBOOL2: BOOL;
+	TCPclient: dc_ecp.TcpClientByteStream;
+	dataIn: STRING(255) := '';
+	carrierID: WORD;
+	outputString: STRING(255);
+	Result : RTS_IEC_RESULT;
+	dtNow : DATE_AND_TIME;
+	processTime : TIME;
+END_VAR
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+TONInst4();
+RFID();
+TCPclient();
+
+CASE state OF
+	
+0: // Initiate coneveyor belt
+IO.xQA1_RIGHT := TRUE;
+IO.xMB20 := FALSE; 
+RFID.ClearError();
+state := 1;
+
+1: //Connect to PC through TCP
+TCPclient.Connect(sIP :='172.20.66.67', uiPort:=8001);
+state :=2;
+	
+2: // Wait for connection with PC through TCP
+IF TCPclient.xConnected AND TCPclient.xReady THEN
+	state := 3;
+END_IF
+	
+
+3:
+IF RFID.xReady THEN //NodeID -> DTM425, network -> CANbus
+	RFID.Connect(usiNodeId := 32, usiNetworkId :=0 , usiChannel :=1); 
+	state := 4;
+END_IF
+
+4: //Must be there
+IF RFID.xReady THEN
+	state := 4;
+END_IF
+
+5: // wait for carrier
+IF IO.xBG21 = TRUE THEN
+	IO.xMB20 := TRUE; // Stopper pulls up
+	IO.xQA1_RIGHT := FALSE; // Conveyor belt stops
+	state := 6;
+END_IF
+
+6: // Read the RFID tag
+RFID.ReadTag(uiStartAddress := 0, uiDataLength := SIZEOF(rfidData), ADR(rfidData));
+state := 7;
+
+7: // wait for
+IF RFID.xReady THEN
+	udiUTC_DateAndTime := TO_UDINT(SysTimeRtcGet(Result));
+	result := SysTimeRTCConvertUTCToLocal(udiUTC_DateAndTime, udiLocal_DateAndTime);
+	dtNow := TO_DT(udiLocal_DateAndTime);
+	//Get carrier ID as character
+	carrierID := dc_ecp.SwapWORD(rfidData.uiCarrierID);
+	// Function call to XML parser with station, carrier id, and time
+	outputString := POU(10,WORD_TO_INT(carrierID),DT_TO_STRING(dtNow));
+	
+	// Send a message over TCP as a byte stream
+	TCPclient.Send(pToSend:=ADR(outputString),uiSizeToSend:=SIZEOF(outputString));
+	state := 8;
+END_IF
+
+8: //receive processing time from server
+IF TCPclient.xReady THEN
+		dataIn := '';
+		varBOOL1 := tcpclient.TryToReceive(pToReceive:=ADR(dataIn),uiSizeToReceive:=SIZEOF(datain));
+		processTime := STRING_TO_TIME(dataIn);
+		IF varBOOL1 = TRUE THEN
+			state := 9;	
+		END_IF
+
+	END_IF
+	
+9: //Hold carrier until the processing time has passed
+TONinst4(IN:=TRUE, pt:=processTime);
+state := 10;
+
+10: //Release carrier when processing time has passed
+IF TONInst4.Q THEN
+	IO.xMB20 := TRUE;
+	IO.xQA1_RIGHT := TRUE;
+	TONInst4.IN := FALSE;
+	state := 11;
+END_IF
+
+11: // Restart flow when the carrier have left the workstation
+IF IO.xBG21 = FALSE THEN
+	state := 4;
+END_IF
+
+
+END_CASE
+
