@@ -52,7 +52,7 @@ END_IF
 
 4: //Must be there
 IF RFID.xReady THEN
-	state := 4;
+	state := 5;
 END_IF
 
 5: // wait for carrier
@@ -98,7 +98,7 @@ state := 10;
 
 10: //Release carrier when processing time has passed
 IF TONInst4.Q THEN
-	IO.xMB20 := TRUE;
+	IO.xMB20 := FALSE;
 	IO.xQA1_RIGHT := TRUE;
 	TONInst4.IN := FALSE;
 	state := 11;
